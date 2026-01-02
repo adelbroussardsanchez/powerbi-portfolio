@@ -1,0 +1,54 @@
+/*
+Calculation Group: Time Intelligence
+Calculation Item: Prior Year
+
+Purpose:
+Calculate the value of an Income Statement line item for the prior year, using the previous month's data (of the prior year) when needed. Handles both absolute values and percentage metrics like Gross Profit %.
+
+Key Techniques:
+- IF to differentiate calculation for percentages (Gross Profit %) versus absolute values.
+- CALCULATE to modify filter context for the previous month (of the prior year) using 'Calendar'[Offset_Period] = -1.
+- ALLEXCEPT to retain context of the current Level 1 item while ignoring other filters.
+- DIVIDE to safely compute percentages, avoiding divide-by-zero errors.
+- FORMAT STRING EXPRESSION with SWITCH to display percentages differently from absolute values.
+
+Notes:
+- 'Offset_Period' = -1 references the previous month of the prior year, as month-end-close data represents the previous month.
+- Gross Profit % is explicitly calculated as Gross Profit ÷ Income for the previous month of the prior year.
+- Other line items are summed for the previous month within the current Level 1 context.
+- Requires a structured 'Income Statement Summary Table' with 'Level 1' hierarchy.
+*/
+
+
+
+IF(
+    SELECTEDVALUE('Income Statement Summary Table'[Level 1]) = "Gross Profit %",
+    DIVIDE(
+        CALCULATE(
+            SUM('Income Statement Summary Table'[Adjusted Value]),
+            'Income Statement Summary Table'[Level 1] = "Gross Profit",
+            ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+            'Calendar'[Offset_Period] = -13
+        ),
+        CALCULATE(
+            SUM('Income Statement Summary Table'[Adjusted Value]),
+            'Income Statement Summary Table'[Level 1] = "Income",
+            ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+            'Calendar'[Offset_Period] = -13
+        ),
+        0
+    ),
+    CALCULATE(
+        SUM('Income Statement Summary Table'[Adjusted Value]),
+        'Calendar'[Offset_Period] = -13
+    )
+)
+
+
+--FORMAT STRING EXPRESSION
+
+SWITCH(
+    TRUE(),
+    SELECTEDVALUE('Income Statement Summary Table'[Level 1]) = "Gross Profit %", "0%;(0%)",
+    "#,##0;(#,##0)"
+)
