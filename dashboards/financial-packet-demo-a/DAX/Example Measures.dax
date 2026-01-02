@@ -1,3 +1,5 @@
+--BASE MEASURES
+
 L1 Income CY = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
 'Income Statement Summary Table'[Level 1] = "Income",
 'Calendar'[Offset_Year] = 0)
@@ -15,6 +17,13 @@ L1 Income Avg CY = AVERAGEX(FILTER(ALLSELECTED('Calendar'),
 [L1 Income CY])
 
 
+
+L1 Gross Profit = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Gross Profit")
+
+
+
+--PERIOD-AVERAGED MEASURES
 
 L1 Gross Profit % CY = 
 AVERAGEX(
@@ -50,10 +59,7 @@ L1 Gross Profit % Avg CY = AVERAGEX(FILTER(ALLSELECTED('Calendar'),
 
 
 
-L1 Gross Profit = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
-'Income Statement Summary Table'[Level 1] = "Gross Profit")
-
-
+--TIME-BASED MEASURES
 
 L1 Gross Profit YTD = TOTALYTD(
     [L1 Gross Profit], 
@@ -69,6 +75,8 @@ CALCULATE(
 )
 
 
+
+--MARGINS/RATIOS
 
 L1 Gross Profit Margin = (([L1 Gross Profit])/[L1 Income])
 
@@ -86,6 +94,7 @@ IF(
         CALCULATE([L1 Income], SAMEPERIODLASTYEAR('Calendar'[Date]))
     )
 )
+
 
 
 
