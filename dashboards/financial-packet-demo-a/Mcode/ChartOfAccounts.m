@@ -1,5 +1,5 @@
 let
-    Source = Excel.Workbook(Web.Contents("https://[REDACTED].sharepoint.com/sites/PowerBIDashboards/Shared%20Documents/General/PowerBI%20Clients/WEC/DO%20NOT%20MOVE/Chart%20of%20Accounts.xlsx"), null, true),
+    Source = Excel.Workbook(Web.Contents("https://[REDACTED].sharepoint.com/sites/PowerBIDashboards/Shared%20Documents/General/PowerBI%20Clients/[REDACTED]/DO%20NOT%20MOVE/Chart%20of%20Accounts.xlsx"), null, true),
     Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
     #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
     #"Removed Other Columns" = Table.SelectColumns(#"Promoted Headers",{"Account #", "Account", "Type", "Detail type", "Description"}),
@@ -324,4 +324,5 @@ let
 ),
     #"Changed Type1" = Table.TransformColumnTypes(#"Added Level 4 Order",{{"Level 2 Conditional", type text}, {"Level 2 Order", Int64.Type}})
 in
+
     #"Changed Type1"
