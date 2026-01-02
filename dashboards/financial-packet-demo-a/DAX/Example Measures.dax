@@ -1,0 +1,91 @@
+L1 Income CY = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Income",
+'Calendar'[Offset_Year] = 0)
+
+
+
+L1 Income LY = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Income",
+'Calendar'[Offset_Year] = -1)
+
+
+
+L1 Income Avg CY = AVERAGEX(FILTER(ALLSELECTED('Calendar'),
+'Calendar'[Period] <= MAX('Calendar'[Period])),
+[L1 Income CY])
+
+
+
+L1 Gross Profit % CY = 
+AVERAGEX(
+SUMMARIZE(
+FILTER(
+ALLSELECTED('Calendar'),
+'Calendar'[Period] <= MAX('Calendar'[Period]) && 'Calendar'[Offset_Year] = 0
+),
+'Calendar'[Period]
+),
+DIVIDE([L1 Gross Profit CY], [L1 Income CY])
+)
+
+
+
+L1 Gross Profit % LY = 
+AVERAGEX(
+SUMMARIZE(
+FILTER(
+ALLSELECTED('Calendar'),
+'Calendar'[Period] <= MAX('Calendar'[Period]) && 'Calendar'[Offset_Year] = -1
+),
+'Calendar'[Period]
+),
+DIVIDE([L1 Gross Profit LY], [L1 Income LY])
+)
+
+
+
+L1 Gross Profit % Avg CY = AVERAGEX(FILTER(ALLSELECTED('Calendar'),
+'Calendar'[Period] <= MAX('Calendar'[Period])),
+[L1 Gross Profit % CY])
+
+
+
+L1 Gross Profit = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Gross Profit")
+
+
+
+L1 Gross Profit YTD = TOTALYTD(
+    [L1 Gross Profit], 
+    'Calendar'[Date]
+)
+
+
+
+L1 Gross Profit YTD LY = 
+CALCULATE(
+    [L1 Gross Profit YTD],
+    SAMEPERIODLASTYEAR('Calendar'[Date])
+)
+
+
+
+L1 Gross Profit Margin = (([L1 Gross Profit])/[L1 Income])
+
+
+
+L1 Gross Profit Margin SPLY = 
+VAR CurrentPeriodHasData =
+    NOT ISBLANK([L1 Gross Profit])
+
+RETURN
+IF(
+    CurrentPeriodHasData,
+    DIVIDE(
+        CALCULATE([L1 Gross Profit], SAMEPERIODLASTYEAR('Calendar'[Date])),
+        CALCULATE([L1 Income], SAMEPERIODLASTYEAR('Calendar'[Date]))
+    )
+)
+
+
+
