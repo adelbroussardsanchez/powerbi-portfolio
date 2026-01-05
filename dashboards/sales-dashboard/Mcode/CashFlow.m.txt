@@ -1,0 +1,17 @@
+let
+    Source = Excel.Workbook(Web.Contents("https://[REDACTED].sharepoint.com/sites/PowerBIDashboards/Shared%20Documents/General/PowerBI%20Clients/[REDACTED]/DO%20NOT%20MOVE/Cash%20Flow.xlsx"), null, true),
+    Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
+    #"Promoted Headers" = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
+    #"Renamed Columns" = Table.RenameColumns(#"Promoted Headers",{{"Column1", "Account"}}),
+    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Renamed Columns", {"Account"}, "Attribute", "Value"),
+    #"Renamed Columns1" = Table.RenameColumns(#"Unpivoted Columns",{{"Attribute", "Date"}, {"Value", "Amount"}}),
+    #"Trimmed Text" = Table.TransformColumns(#"Renamed Columns1",{{"Account", Text.Trim, type text}}),
+    #"Filtered Rows1" = Table.SelectRows(#"Trimmed Text", each ([Date] <> "Total")),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Filtered Rows1",{{"Date", type date}, {"Amount", type number}}),
+    #"Sorted Rows" = Table.Sort(#"Changed Type2",{{"Date", Order.Ascending}}),
+    #"Merged Queries" = Table.NestedJoin(#"Sorted Rows", {"Account"}, #"Chart of Accounts", {"Account"}, "Chart of Accounts", JoinKind.LeftOuter),
+    #"Expanded Chart of Accounts" = Table.ExpandTableColumn(#"Merged Queries", "Chart of Accounts", {"Account #"}, {"Account #"}),
+    #"Filtered Rows" = Table.SelectRows(#"Expanded Chart of Accounts", each ([Account] <> "Net cash provided by financing activities" and [Account] <> "Net cash provided by investing activities" and [Account] <> "Total Adjustments to reconcile Net Income to Net Cash provided by operations:")),
+    #"Added Custom" = Table.AddColumn(#"Filtered Rows", "Custom", each "")
+in
+    #"Added Custom"
