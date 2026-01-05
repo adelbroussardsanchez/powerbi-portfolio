@@ -1,0 +1,43 @@
+Customer Display Order = 
+VAR Fixed = {"Other","Local","Donations"}
+
+VAR CustomersWithGP =
+    SELECTCOLUMNS(
+        DISTINCT( 'P&L by Customer'[Customer Custom] ),
+        "CustomerName", 'P&L by Customer'[Customer Custom],
+        "GP", CALCULATE([GP Amount])
+    )
+
+VAR RankedExclFixed =
+    ADDCOLUMNS(
+        CustomersWithGP,
+        "GP_Rank_ExclFixed",
+            RANKX(
+                FILTER(CustomersWithGP, NOT ( [CustomerName] IN Fixed )),
+                [GP],
+                ,
+                DESC,
+                DENSE
+            )
+    )
+
+RETURN
+    ADDCOLUMNS(
+        RankedExclFixed,
+        "Category",
+            SWITCH(
+                TRUE(),
+                [CustomerName] IN Fixed, [CustomerName],
+                [GP_Rank_ExclFixed] <= 10, [CustomerName],
+                "Other"
+            ),
+        "FinalSortOrder",
+            SWITCH(
+                TRUE(),
+                [CustomerName] = "Other", 11,
+                [CustomerName] = "Local", 12,
+                [CustomerName] = "Donations", 13,
+                [GP_Rank_ExclFixed] <= 10, [GP_Rank_ExclFixed],
+                11
+            )
+    )
