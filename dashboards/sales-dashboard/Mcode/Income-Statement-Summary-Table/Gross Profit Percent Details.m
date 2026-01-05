@@ -1,0 +1,27 @@
+let
+    Source = #"Transaction Detail",
+    #"Merged Queries1" = Table.NestedJoin(Source, {"Account #"}, #"IS_Income Accounts", {"Account #"}, "IS_Gross Profit Accounts", JoinKind.LeftOuter),
+    #"Expanded IS_Income Accounts" = Table.ExpandTableColumn(#"Merged Queries1", "IS_Gross Profit Accounts", {"Level 1"}, {"Level 1"}),
+    #"Filtered Rows" = Table.SelectRows(#"Expanded IS_Income Accounts", each ([Level 1] = "Income")),
+    #"Duplicated Column" = Table.DuplicateColumn(#"Filtered Rows", "Date", "Date - Copy"),
+    #"Calculated Start of Month" = Table.TransformColumns(#"Duplicated Column",{{"Date - Copy", Date.StartOfMonth, type date}}),
+    #"Renamed Columns4" = Table.RenameColumns(#"Calculated Start of Month",{{"Date - Copy", "Period"}}),
+    #"Grouped Rows1" = Table.Group(#"Renamed Columns4", {"Period", "Class"}, {{"Adjusted Value", each List.Sum([Adjusted Value]), type nullable number}}),
+    #"Duplicated Column1" = Table.DuplicateColumn(#"Grouped Rows1", "Period", "Period - Copy"),
+    #"Changed Type4" = Table.TransformColumnTypes(#"Duplicated Column1",{{"Period - Copy", type text}}),
+    #"Replaced Value27" = Table.ReplaceValue(#"Changed Type4",null,"",Replacer.ReplaceValue,{"Class"}),
+    #"Added Custom3" = Table.AddColumn(#"Replaced Value27", "PK", each [#"Period - Copy"]&[Class]),
+    #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom3",{{"PK", type text}}),
+    #"Merged Queries2" = Table.NestedJoin(#"Changed Type5", {"PK"}, #"TD_Gross Profit Details", {"PK"}, "TD_Gross Profit Details", JoinKind.FullOuter),
+    #"Expanded TD_Gross Profit Details" = Table.ExpandTableColumn(#"Merged Queries2", "TD_Gross Profit Details", {"Period", "Class", "Adjusted Value"}, {"TD_Gross Profit Details.Period", "TD_Gross Profit Details.Class", "TD_Gross Profit Details.Adjusted Value"}),
+    #"Added Conditional Column" = Table.AddColumn(#"Expanded TD_Gross Profit Details", "CustomPeriod", each if [Period] = null then [TD_Gross Profit Details.Period] else [Period]),
+    #"Added Conditional Column1" = Table.AddColumn(#"Added Conditional Column", "CustomClass", each if [Class] = null then [TD_Gross Profit Details.Class] else [Class]),
+    #"Added Custom1" = Table.AddColumn(#"Added Conditional Column1", "Gross Profit %", each [TD_Gross Profit Details.Adjusted Value] / [Adjusted Value]),
+    #"Added Custom2" = Table.AddColumn(#"Added Custom1", "Level 1", each "Gross Profit %"),
+    #"Removed Other Columns2" = Table.SelectColumns(#"Added Custom2",{"CustomPeriod", "CustomClass", "Gross Profit %", "Level 1"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns2",{{"CustomPeriod", type date}, {"CustomClass", type text}, {"Gross Profit %", type number}, {"Level 1", type text}}),
+    #"Renamed Columns5" = Table.RenameColumns(#"Changed Type",{{"Gross Profit %", "Adjusted Value"}, {"CustomPeriod", "Period"}, {"CustomClass", "Class"}}),
+    #"Rounded Off" = Table.TransformColumns(#"Renamed Columns5",{{"Adjusted Value", each Number.Round(_, 4), type number}}),
+    #"Replaced Value" = Table.ReplaceValue(#"Rounded Off",null,0,Replacer.ReplaceValue,{"Adjusted Value"})
+in
+    #"Replaced Value"
