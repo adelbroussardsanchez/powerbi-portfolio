@@ -1,0 +1,92 @@
+--CORE FINANCIAL MEASURES & CALCULATIONS
+
+L1 Gross Profit = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Gross Profit")
+
+L1 Income CY = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Income",
+'Calendar'[Offset_Year] = 0)
+
+L1 Income LY = CALCULATE(SUM('Income Statement Summary Table'[Adjusted Value]),
+'Income Statement Summary Table'[Level 1] = "Income",
+'Calendar'[Offset_Year] = -1)
+
+L1 Gross Profit Margin = (([L1 Gross Profit])/[L1 Income])
+
+
+--TIME INTELLIGENCE
+
+L1 Gross Profit YTD = TOTALYTD(
+    [L1 Gross Profit], 
+    'Calendar'[Date]
+)
+
+L1 Gross Profit YTD LY = 
+CALCULATE(
+    [L1 Gross Profit YTD],
+    SAMEPERIODLASTYEAR('Calendar'[Date])
+)
+
+L1 Gross Profit Margin YTD = TOTALYTD(
+    [L1 Gross Profit Margin], 
+    'Calendar'[Date]
+)
+
+L1 Gross Profit Margin YTD LY = 
+CALCULATE(
+    [L1 Gross Profit Margin YTD],
+    SAMEPERIODLASTYEAR('Calendar'[Date])
+)
+
+L1 Gross Profit Margin SPLY = 
+VAR CurrentPeriodHasData =
+    NOT ISBLANK([L1 Gross Profit])
+
+RETURN
+IF(
+    CurrentPeriodHasData,
+    DIVIDE(
+        CALCULATE([L1 Gross Profit], SAMEPERIODLASTYEAR('Calendar'[Date])),
+        CALCULATE([L1 Income], SAMEPERIODLASTYEAR('Calendar'[Date]))
+    )
+)
+
+
+--AVERAGES & TRENDS
+
+L1 Income Avg CY = AVERAGEX(FILTER(ALLSELECTED('Calendar'),
+'Calendar'[Period] <= MAX('Calendar'[Period])),
+[L1 Income CY])
+
+
+
+Sales Income Avg CY = 
+AVERAGEX(
+    SUMMARIZE(
+        FILTER(
+            ALLSELECTED('Calendar'),
+            'Calendar'[Period] <= MAX('Calendar'[Period]) && 'Calendar'[Offset_Year] = 0
+        ),
+        'Calendar'[Period]
+    ),
+    [L1 Income CY]
+)
+
+
+--FORMATTING
+
+Brokers = 
+VAR _Value =
+    CALCULATE(
+        SUM('P&L by Customer'[Adjusted Value]),
+        'P&L by Customer'[Level 2] = "Brokers'"
+    )
+RETURN
+    FORMAT(_Value, "#,##0;(#,##0)")
+
+Brokers % = 
+VAR Brokers =
+    DIVIDE([Brokers 1], [Sales Sum])
+RETURN
+    FORMAT(Brokers, "#,##0.00%;(#,##0.00%)")
+
