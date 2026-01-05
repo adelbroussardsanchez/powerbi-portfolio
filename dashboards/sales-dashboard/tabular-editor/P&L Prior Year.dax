@@ -1,0 +1,116 @@
+/*
+Calculation Group: P&L Time Intelligence
+Calculation Item: Prior Year
+
+Purpose:
+Applies prior-year logic dynamically based on Income Statement Level 1
+Handles both percentage-based and absolute-value rows
+
+Key Techniques:
+- SELECTEDVALUE-based branching
+- Calendar offset logic
+- ALL vs ALLSELECTED control
+- Dynamic numerator/denominator switching
+
+Notes:
+- Designed to work with a single base measure
+- Replaces multiple PY measures across P&L
+*/
+
+
+
+IF(
+    SELECTEDVALUE('Income Statement Summary Table'[Level 1]) = "Gross Profit %",
+    IF(
+        NOT ISBLANK(SELECTEDVALUE('Calendar'[Offset_Period])),
+        DIVIDE(
+            CALCULATE(
+                SUM('Income Statement Summary Table'[Adjusted Value]),
+                'Income Statement Summary Table'[Level 1] = "Gross Profit",
+                ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+                FILTER(
+                    ALL('Calendar'),
+                    'Calendar'[Offset_Year] = -1 &&
+                    'Calendar'[Offset_Period] = SELECTEDVALUE('Calendar'[Offset_Period])
+                )
+            ),
+            CALCULATE(
+                SUM('Income Statement Summary Table'[Adjusted Value]),
+                'Income Statement Summary Table'[Level 1] = "Income",
+                ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+                FILTER(
+                    ALL('Calendar'),
+                    'Calendar'[Offset_Year] = -1 &&
+                    'Calendar'[Offset_Period] = SELECTEDVALUE('Calendar'[Offset_Period])
+                )
+            ),
+            0
+        ),
+        IF(
+            NOT ISBLANK(SELECTEDVALUE('Calendar'[Quarter])),
+            DIVIDE(
+                CALCULATE(
+                    SUM('Income Statement Summary Table'[Adjusted Value]),
+                    'Income Statement Summary Table'[Level 1] = "Gross Profit",
+                    ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+                    FILTER(
+                        ALL('Calendar'),
+                        'Calendar'[Offset_Year] = -1 &&
+                        'Calendar'[Offset_Period] <= -1 &&
+                        'Calendar'[Quarter] = SELECTEDVALUE('Calendar'[Quarter])
+                    )
+                ),
+                CALCULATE(
+                    SUM('Income Statement Summary Table'[Adjusted Value]),
+                    'Income Statement Summary Table'[Level 1] = "Income",
+                    ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+                    FILTER(
+                        ALL('Calendar'),
+                        'Calendar'[Offset_Year] = -1 &&
+                        'Calendar'[Offset_Period] <= -1 &&
+                        'Calendar'[Quarter] = SELECTEDVALUE('Calendar'[Quarter])
+                    )
+                ),
+                0
+            ),
+            DIVIDE(
+                CALCULATE(
+                    SUM('Income Statement Summary Table'[Adjusted Value]),
+                    'Income Statement Summary Table'[Level 1] = "Gross Profit",
+                    ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+                    FILTER(
+                        ALL('Calendar'),
+                        'Calendar'[Offset_Year] = -1 &&
+                        'Calendar'[Offset_Period] <= -1
+                    )
+                ),
+                CALCULATE(
+                    SUM('Income Statement Summary Table'[Adjusted Value]),
+                    'Income Statement Summary Table'[Level 1] = "Income",
+                    ALLEXCEPT('Income Statement Summary Table', 'Income Statement Summary Table'[Level 1]),
+                    FILTER(
+                        ALL('Calendar'),
+                        'Calendar'[Offset_Year] = -1 &&
+                        'Calendar'[Offset_Period] <= -1
+                    )
+                ),
+                0
+            )
+        )
+    ),
+    CALCULATE(
+        SUM('Income Statement Summary Table'[Adjusted Value]),
+        'Calendar'[Offset_Year] = -1,
+        'Calendar'[Offset_Period] <= -1
+    )
+)
+
+
+
+--FORMAT STRING EXPRESSION
+
+SWITCH(
+    TRUE(),
+    SELECTEDVALUE('Income Statement Summary Table'[Level 1]) = "Gross Profit %", "0%;(0%)",
+    "#,##0;(#,##0)"
+)

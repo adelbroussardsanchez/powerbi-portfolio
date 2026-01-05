@@ -1,0 +1,26 @@
+/*
+Calculation Group: Time Intelligence
+Calculation Item: ↑↓
+
+Purpose:
+Shows a red circle if there has been a negative greater than 10% change over the previous year, and a green circle if there has been a positive 10% change over the previous year. 
+
+Key Techniques:
+- SWITCH to check if multiple conditions are in order.
+- SIGN to detect if a value is positive or negative.
+- UNICHAR to show a symbol (green/red circle) based on performance.
+
+
+Notes:
+- A "negative change" does not denote sign, but rather "good" or "bad". Example: A 10% increase in Income constitutes a positive change, while a 10% increase in Expenses constitutes a negative change.
+*/
+
+
+SWITCH(
+    TRUE(),
+    SIGN([MTD Current Year]) > 0 && DIVIDE([MTD Current Year] - [MTD Prior Year], ABS([MTD Prior Year]), BLANK()) > 0.1, UNICHAR(128994),
+    SIGN([MTD Current Year]) > 0 && DIVIDE([MTD Current Year] - [MTD Prior Year], ABS([MTD Prior Year]), BLANK()) < -0.1, UNICHAR(128308),
+    SIGN([MTD Current Year]) < 0 && DIVIDE([MTD Current Year] - [MTD Prior Year], ABS([MTD Prior Year]), BLANK()) > 0.1, UNICHAR(128994),
+    SIGN([MTD Current Year]) < 0 && DIVIDE([MTD Current Year] - [MTD Prior Year], ABS([MTD Prior Year]), BLANK()) < -0.1, UNICHAR(128308),
+    BLANK()
+)

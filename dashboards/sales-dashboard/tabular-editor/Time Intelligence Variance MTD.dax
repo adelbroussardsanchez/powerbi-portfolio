@@ -1,0 +1,26 @@
+/*
+Calculation Group: Time Intelligence
+Calculation Item: Variance
+
+Purpose:
+Calculates the month-over-month variance of each line item.
+
+Key Techniques:
+- SWITCH to check if multiple conditions are in order.
+- SIGN to ensure division is only performed if the current value is non-zero.
+- ISBLANK to check if a value is empty or missing.
+
+*/
+
+
+SWITCH(
+    TRUE(),
+    ISBLANK([MTD Prior Year]) || ISBLANK([MTD Current Year]), BLANK(),
+    SIGN([MTD Current Year]) <> 0, DIVIDE([MTD Current Year] - [MTD Prior Year], ABS([MTD Prior Year])),
+    0
+)
+
+
+--FORMAT STRING EXPRESSION
+
+"#,##0%;(#,##0%)"
