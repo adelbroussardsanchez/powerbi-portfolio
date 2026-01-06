@@ -1,0 +1,39 @@
+--BASE MEASURES
+
+Sum of Effort = SUM('Resource Assignments'[Total Effort (Hours)])
+
+
+--AGGREGATION MEASURES
+
+Effort in Days = (CALCULATE([Sum of Effort]/8))
+
+
+Effort in Weeks = CALCULATE([Sum of Effort]/40)
+
+
+--FLAGS & STATUS LOGIC
+
+Backlog Task Count = CALCULATE(COUNTA('Project Tasks'[Project task ID]),FILTER('Project Tasks',[Project Bucket] = "Backlog"))
+
+Backlog Flag = IF('Project Tasks'[Project Bucket] = "Backlog", 1, 0)
+
+
+--TIME INTELLIGENCE
+
+Time Until Next Monday = 
+VAR CurrentDate = NOW()
+VAR NextMonday = 
+    VAR DayOfWeek = WEEKDAY(CurrentDate, 2)
+    VAR DaysToAdd = IF(DayOfWeek = 1, 7, 8 - DayOfWeek)
+    RETURN CurrentDate + DaysToAdd - TIME(HOUR(CurrentDate), MINUTE(CurrentDate), SECOND(CurrentDate))
+VAR Diff = NextMonday - CurrentDate
+VAR Days = INT(Diff)
+VAR Hours = INT((Diff - Days) * 24)
+VAR Result = CONCATENATE(FORMAT(Days, "0") & " days ", FORMAT(Hours, "0") & " hours")
+RETURN Result
+
+
+Upcoming Monday = 
+VAR CurrentDate = TODAY()
+VAR NextMonday = CALCULATE(MIN('Calendar'[Next Monday]), 'Calendar'[Next Monday] > CurrentDate)
+RETURN NextMonday & " 10:00 AM"
